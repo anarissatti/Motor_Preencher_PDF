@@ -1,0 +1,103 @@
+{
+    "depositario_central": {
+        "ancora": "Depositário Central, Bolsas ou Entidades de Balcão Organizado?",
+        "tipo": "checkbox",
+        "valor": [
+            "Não"
+        ]
+    },
+    "leis_estrangeiras": {
+        "ancora": "Entidade constituída em outro país ou sob leis estrangeiras?",
+        "tipo": "checkbox",
+        "valor": [
+            "Não"
+        ]
+    },
+    "socio_ppe_tabela": {
+        "ancora": "PPE/PEP*",
+        "tipo": "ppe_tabela",
+        "valor": [
+            "Não",
+            "Não"
+        ]
+    },
+    "socio_americano": {
+        "ancora": "Entidade possui sócio(s) americano com 25% ou mais",
+        "tipo": "checkbox",
+        "valor": [
+            "Não"
+        ]
+    },
+    "ativo_superior_240m": {
+        "ancora": "Ativo total superior a R$ 240.000.000,00?",
+        "tipo": "checkbox",
+        "valor": [
+            "Não"
+        ]
+    },
+    "receita_50_servicos": {
+        "ancora": "extração mineral e mais de 50% dos ativos da empresa são inerentes estritamente a essas atividades?",
+        "tipo": "checkbox",
+        "valor": [
+            "Não"
+        ]
+    },
+    "possui_patrimonio": {
+        "ancora": "Possui patrimônio:",
+        "tipo": "checkbox",
+        "valor": [
+            "Não"
+        ]
+    },
+    "declaracao_ppe": {
+        "ancora": "PPE ou PEP*",
+        "tipo": "checkbox",
+        "valor": [
+            "Não sou pessoa politicamente exposta ou pessoa exposta politicamente, nos termos dos normativos em vigor.",
+            "Não possuo vínculo com uma pessoa politicamente exposta ou pessoa exposta politicamente."
+        ]
+    },
+    "sicredi_cheque_empresarial": {
+        "ancora": "Sicredi Cheque Empresarial",
+        "tipo": "checkbox",
+        "valor": [
+            "SIM"
+        ]
+    },
+    "talao_cheque_adesao": {
+        "ancora": "Talão de Cheque",
+        "tipo": "checkbox",
+        "valor": [
+            "SIM"
+        ]
+    },
+    "talao_folhas": {
+        "ancora": "Caso escolhida a opção \"SIM\", assinalar:",
+        "tipo": "checkbox",
+        "valor": [
+            "Talão 10 folhas"
+        ]
+    },
+    "canais": {
+        "ancora": "Canais",
+        "tipo": "checkbox",
+        "valor": [
+            "Sicredi Internet Empresa",
+            "Sicredi Mobi",
+            "Consulta",
+            "Transação",
+            "Consulta",
+            "Transação"
+        ]
+    },
+    "declaracao_proposito": {
+        "ancora": "Declaração de propósito",
+        "tipo": "checkbox",
+        "valor": [
+            "Movimentação de Conta Corrente (débito / crédito / transferências / depósitos em espécie);",
+            "Utilização de meios de pagamento (cheque / cartão de débito / cartão de crédito / cobrança / débito em conta / internet banking / outros)",
+            "Operações de Investimentos;",
+            "Contratação de Empréstimos, Financiamentos, Repasses e/ ou Operações de Arrendamento Mercantil;"
+        ]
+    }
+}
