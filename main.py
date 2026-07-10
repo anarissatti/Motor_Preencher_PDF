@@ -6,7 +6,7 @@ with open("respostas.json", encoding="utf8") as f:
     dados = json.load(f)
 
 filler = AnchorPdfFiller(
-    "entrada/PROPOSTA_CC_64797168000152.pdf"
+    "entrada/proposta.pdf"
 )
 
 print("PDF aberto com sucesso!")

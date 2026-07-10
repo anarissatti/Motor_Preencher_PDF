@@ -19,7 +19,7 @@ class AnchorPdfFiller:
         "Entidade constituída em outro país ou sob leis estrangeiras?",
         "Capital e Cotistas / Acionistas",
         "Entidade possui sócio(s) americano com 25% ou mais",
-        "Ativo total superior a R$ 240.000.000,00?",
+        #"Ativo total superior a R$ 240.000.000,00?",
         "extração mineral e mais de 50% dos ativos da empresa são inerentes estritamente a essas atividades?",
         "Possui patrimônio:",
         "PPE ou PEP*",
@@ -63,11 +63,24 @@ class AnchorPdfFiller:
     def localizar_ancora(self, ancora):
         logger.info("Localizando âncora: %s", ancora)
 
+        # for numero, page in enumerate(self.doc):
+        #     resultado = sorted(self._buscar_texto(page, ancora), key=lambda rect: (rect.y0, rect.x0))
+
+        #     if resultado:
+        #         logger.info("Âncora encontrada na página %s", numero + 1)
+        #         return page, resultado[0], numero
+            
         for numero, page in enumerate(self.doc):
-            resultado = sorted(self._buscar_texto(page, ancora), key=lambda rect: (rect.y0, rect.x0))
+            resultado = page.search_for(ancora)
 
             if resultado:
-                logger.info("Âncora encontrada na página %s", numero + 1)
+                print("--------------------------------")
+                print("ÂNCORA:", ancora)
+                print("Página:", numero + 1)
+
+                for r in resultado:
+                    print(r)
+
                 return page, resultado[0], numero
 
         return None, None, None
@@ -107,6 +120,64 @@ class AnchorPdfFiller:
             page.rect.width,
             limite_inferior,
         )
+
+    def criar_janelas(self, pagina_inicial, ancora_rect, proxima_pagina=None, proxima_rect=None):
+            janelas = []
+
+            numero_inicial = pagina_inicial.number
+
+            if proxima_pagina is None:
+                for i in range(numero_inicial, len(self.doc)):
+                    page = self.doc[i]
+
+                    if i == numero_inicial:
+                        inicio = ancora_rect.y0
+                    else:
+                        inicio = 0
+
+                    janelas.append(
+                        (
+                            page,
+                            fitz.Rect(
+                                0,
+                                inicio,
+                                page.rect.width,
+                                page.rect.height
+                            )
+                        )
+                    )
+
+                return janelas
+
+            numero_final = proxima_pagina.number
+
+            for i in range(numero_inicial, numero_final + 1):
+
+                page = self.doc[i]
+
+                if i == numero_inicial:
+                    inicio = ancora_rect.y0
+                else:
+                    inicio = 0
+
+                if i == numero_final:
+                    fim = proxima_rect.y0
+                else:
+                    fim = page.rect.height
+
+                janelas.append(
+                    (
+                        page,
+                        fitz.Rect(
+                            0,
+                            inicio,
+                            page.rect.width,
+                            fim
+                        )
+                    )
+                )
+
+            return janelas
 
     def obter_opcoes_da_janela(self, page, janela, respostas):
         opcoes = {}
@@ -202,12 +273,140 @@ class AnchorPdfFiller:
             self.marcar_checkbox(page, primeira_linha[2 if respostas[1].lower() == "sim" else 3])
 
         return True
+    
+    def marcar_checkbox_por_texto(
+            self,
+            janelas,
+            texto,
+            ocorrencia=1,):
+
+            encontrados = []
+
+            for page, janela in janelas:
+
+                for rect in self._buscar_texto(page, texto, clip=janela):
+                    encontrados.append((page, rect, janela))
+
+            encontrados.sort(
+                key=lambda x: (
+                    x[0].number,
+                    x[1].y0,
+                    x[1].x0
+                )
+            )
+
+            if len(encontrados) < ocorrencia:
+                logger.warning("Texto '%s' não encontrado.", texto)
+                return False
+
+            page, texto_rect, janela = encontrados[ocorrencia - 1]
+
+            checkbox = self.localizar_checkbox(
+                page,
+                texto_rect,
+                janela
+            )
+
+            if checkbox:
+                self.marcar_checkbox(page, checkbox)
+                return True
+
+            return False
+
+    def preencher_canais(self, campo):
+
+        page, rect, pagina = self.localizar_ancora(campo.ancora)
+
+        if page is None:
+            return False
+
+        proxima_page, proxima_rect, _ = self.localizar_proxima_ancora(
+            campo.ancora,
+            pagina,
+            rect
+        )
+
+        # janela = self.criar_janela(
+        #     page,
+        #     rect,
+        #     proxima_page,
+        #     proxima_rect
+        # )
+
+        janelas = self.criar_janelas(
+            page,
+            rect,
+            proxima_page,
+            proxima_rect
+        )
+
+        # print("\n====================")
+        # print("Página:", pagina + 1)
+        # print("Janela:", janelas)
+        # print("====================")
+
+        # print(page.get_text())
+        valores = {v.lower() for v in campo.valor}
+
+        if "internet" in valores:
+            self.marcar_checkbox_por_texto(
+                janelas,
+                "Sicredi Internet Empresa"
+            )
+
+            if "consulta" in valores:
+                self.marcar_checkbox_por_texto(
+                    janelas,
+                    "Consulta",
+                    ocorrencia=1
+                )
+
+            if "transação" in valores:
+                self.marcar_checkbox_por_texto(
+                    janelas,
+                    "transação",
+                    ocorrencia=1
+                )
+
+        if "mobi" in valores:
+            self.marcar_checkbox_por_texto(
+                janelas,
+                "Sicredi Mobi"
+            )
+
+            if "consulta" in valores:
+                self.marcar_checkbox_por_texto(
+                    
+                    janelas,
+                    "Consulta",
+                    ocorrencia=2
+                )
+
+            if "transação" in valores:
+                self.marcar_checkbox_por_texto(
+                    
+                    janelas,
+                    "transação",
+                    ocorrencia=2
+                )
+
+        if "nenhum" in valores:
+            self.marcar_checkbox_por_texto(
+        
+                janelas,
+                "Nenhum"
+            )
+
+        return True
 
     def preencher_grupo(self, grupo):
         campo = self._normalizar_campo(grupo)
 
         if campo.tipo == "ppe_tabela":
             return self.preencher_ppe_tabela(campo)
+
+        if campo.tipo == "canais":
+            return self.preencher_canais(campo)
 
         page, rect, pagina = self.localizar_ancora(campo.ancora)
         if page is None:

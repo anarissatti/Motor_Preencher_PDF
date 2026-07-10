@@ -1,5 +1,7 @@
 import customtkinter as ctk
 import json
+from pathlib import Path
+from tkinter import filedialog
 from dataclasses import asdict
 from preencher_pdf import AnchorPdfFiller, Campo
 
@@ -14,6 +16,7 @@ class TelaPrincipal(ctk.CTk):
 
         self.title("Gerador de Proposta Sicredi - Completo")
         self.geometry("950x850")
+        self.pdf_path = ctk.StringVar(value="")
         self.criar_tela()
 
     def criar_tela(self):
@@ -27,11 +30,42 @@ class TelaPrincipal(ctk.CTk):
         )
         titulo.pack(pady=20)
 
+        self.criar_seletor_pdf()
         self.criar_perguntas_cadastrais()
         self.criar_secao_socio_ppe()
         self.criar_secao_financeira_patrimonio()
         self.criar_secao_produtos_canais()
         self.criar_botoes()
+
+    # ====================================================
+    def criar_seletor_pdf(self):
+        self.criar_titulo_secao("Arquivo PDF")
+
+        frame_pdf = ctk.CTkFrame(self.frame)
+        frame_pdf.pack(fill="x", pady=5)
+
+        self.campo_pdf = ctk.CTkEntry(
+            frame_pdf,
+            textvariable=self.pdf_path,
+            placeholder_text="Selecione o PDF que deseja preencher",
+        )
+        self.campo_pdf.pack(side="left", fill="x", expand=True, padx=(10, 8), pady=10)
+
+        ctk.CTkButton(
+            frame_pdf,
+            text="Selecionar PDF",
+            width=140,
+            command=self.selecionar_pdf,
+        ).pack(side="left", padx=(0, 10), pady=10)
+
+    def selecionar_pdf(self):
+        caminho = filedialog.askopenfilename(
+            title="Selecione o PDF",
+            filetypes=[("Arquivos PDF", "*.pdf")],
+        )
+
+        if caminho:
+            self.pdf_path.set(caminho)
 
     # ====================================================
     def criar_perguntas_cadastrais(self):
@@ -58,13 +92,6 @@ class TelaPrincipal(ctk.CTk):
     # ====================================================
     def criar_secao_socio_ppe(self):
         self.criar_titulo_secao("Sócios, PPE/PEP e FATCA")
-
-        # Dados do sócio EMELLYNE VERGANI (PPE e Vínculo)
-        #ctk.CTkLabel(
-        #    self.frame, 
-        #    text="Sócio: EMELLYNE VERGANI - PPE / Vínculo com PPE",
-        #    font=("Arial", 14, "bold")
-        # ).pack(anchor="w", pady=(10, 2))
         
         self.socio_ppe = ctk.StringVar(value="Não")
         self.socio_vinculo_ppe = ctk.StringVar(value="Não")
@@ -216,6 +243,22 @@ class TelaPrincipal(ctk.CTk):
     # ====================================================
     
     def gerar_pdf(self):
+            caminho_pdf_texto = self.pdf_path.get().strip()
+            if not caminho_pdf_texto:
+                self.status.configure(text="Selecione um PDF antes de gerar.", text_color="red")
+                return
+
+            caminho_pdf = Path(caminho_pdf_texto)
+            if not caminho_pdf.is_file():
+                self.status.configure(text="O PDF selecionado nÃ£o foi encontrado.", text_color="red")
+                return
+
+            pasta_downloads = Path.home() / "Downloads"
+            if not pasta_downloads.exists():
+                pasta_downloads = Path.home()
+
+            caminho_saida = pasta_downloads / "pdf_prenchido.pdf"
+
             
             dados = {
                 "depositario_central": Campo(
@@ -282,13 +325,13 @@ class TelaPrincipal(ctk.CTk):
                 ),
                 "canais": Campo(
                     ancora="Canais",
-                    tipo="checkbox",
+                    tipo="canais",
                     valor=[
                         texto for marcado, texto in [
-                            (self.canal_internet.get(), "Sicredi Internet Empresa"),
-                            (self.canal_mobi.get(), "Sicredi Mobi"),
-                            (self.canal_nenhum.get(), "Nenhum"),
-                            (self.canal_consulta.get(), "Consulta"),
+                            (self.canal_internet.get(), "internet"),
+                            (self.canal_mobi.get(), "mobi"),
+                            (self.canal_nenhum.get(), "nenhum"),
+                            (self.canal_consulta.get(), "consulta"),
                             (self.canal_transacao.get(), "Transação"),
                             (self.canal_consulta.get(), "Consulta"),
                             (self.canal_transacao.get(), "Transação"),
@@ -316,10 +359,12 @@ class TelaPrincipal(ctk.CTk):
                 json.dump({nome: asdict(campo) for nome, campo in dados.items()}, f, indent=4, ensure_ascii=False)
 
             try:
-                filler = AnchorPdfFiller("entrada/proposta.pdf")
+                filler = AnchorPdfFiller(caminho_pdf)
                 for grupo in dados.values():
                     filler.preencher_grupo(grupo)
-                filler.salvar("saida/preenchido.pdf")
+                filler.salvar(caminho_saida)
+                self.status.configure(text=f"PDF gerado com sucesso em: {caminho_saida}", text_color="green")
+                return
 
                 self.status.configure(text="✔ PDF gerado com sucesso!", text_color="green")
             except Exception as e:

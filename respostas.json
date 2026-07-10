@@ -80,11 +80,11 @@
     },
     "canais": {
         "ancora": "Canais",
-        "tipo": "checkbox",
+        "tipo": "canais",
         "valor": [
-            "Sicredi Internet Empresa",
-            "Sicredi Mobi",
-            "Consulta",
+            "internet",
+            "mobi",
+            "consulta",
             "Transação",
             "Consulta",
             "Transação"
